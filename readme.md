@@ -1,1 +1,0 @@
-# Spring test project

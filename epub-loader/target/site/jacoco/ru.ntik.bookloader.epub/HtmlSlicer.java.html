@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlSlicer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Book Loader</a> &gt; <a href="index.source.html" class="el_package">ru.ntik.bookloader.epub</a> &gt; <span class="el_source">HtmlSlicer.java</span></div><h1>HtmlSlicer.java</h1><pre class="source lang-java linenums">package ru.ntik.bookloader.epub;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class HtmlSlicer {
+    private HtmlSlicer() {}
+
+    /**
+     * Temporary html class name used to mark elements by which to split document
+     * Should be somewhat long and uncommon to not interfere with documents own classes
+     */
+    static final String SPLIT_CLASS_NAME = &quot;slicersplitpoint&quot;;
+    /**
+     * Returns previous body element
+     * Might return null if there is no previous element in body or at all
+     * @param element
+     * @return
+     */
+    static Element getPreviousElement(Element element) {
+<span class="fc" id="L24">        Element previous = element.previousElementSibling();</span>
+<span class="pc bpc" id="L25" title="1 of 4 branches missed.">        while(previous == null &amp;&amp; element.hasParent()) {</span>
+<span class="fc" id="L26">            element = element.parent();</span>
+<span class="fc" id="L27">            previous = element.previousElementSibling();</span>
+        }
+<span class="pc bpc" id="L29" title="1 of 4 branches missed.">        if(previous != null &amp;&amp; previous.tagName().equals(&quot;head&quot;)) {</span>
+<span class="fc" id="L30">            return null;</span>
+        }
+<span class="fc" id="L32">        return previous;</span>
+    }
+    static List&lt;Document&gt; splitHtmlByMarkedElement(Document document) {
+<span class="fc" id="L35">        Document preSplitDoc = document.clone();</span>
+<span class="fc" id="L36">        Document postSplitDoc = document;</span>
+
+        /*
+            How split occurs:
+            E - leaf element that does not fit to current page (&quot;split element&quot;)
+            t - other leaf tags
+            -Doc#1- | -Doc#2-
+            t t t t | E t t t
+         */
+
+        // removed all elements starting from splitElement
+<span class="fc" id="L47">        Element preSplit = getPreviousElement(preSplitDoc.select(&quot;.&quot;+ SPLIT_CLASS_NAME).get(0));</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (preSplit != null) {</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">            if (!preSplit.nextElementSiblings().isEmpty()) {</span>
+<span class="fc" id="L50">                preSplit.nextElementSiblings().remove();</span>
+            }
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            while (preSplit.hasParent()) {</span>
+<span class="fc" id="L53">                preSplit = preSplit.parent();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                if (!preSplit.nextElementSiblings().isEmpty()) {</span>
+<span class="fc" id="L55">                    preSplit.nextElementSiblings().remove();</span>
+                }
+            }
+        }
+        // removed all elements prior to splitElement (keeping splitElement)
+<span class="fc" id="L60">        Element postSplit = postSplitDoc.select(&quot;.&quot;+ SPLIT_CLASS_NAME).get(0);</span>
+        // removing temporary class after using it
+<span class="fc" id="L62">        postSplit.removeClass(SPLIT_CLASS_NAME);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if(!postSplit.previousElementSiblings().isEmpty()) {</span>
+<span class="fc" id="L64">            postSplit.previousElementSiblings().remove();</span>
+        }
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        while(postSplit.hasParent()) {</span>
+<span class="fc" id="L67">            postSplit = postSplit.parent();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if(!postSplit.previousElementSiblings().isEmpty()) {</span>
+<span class="fc" id="L69">                postSplit.previousElementSiblings().remove();</span>
+            }
+        }
+<span class="fc" id="L72">        return List.of(preSplitDoc,postSplitDoc);</span>
+    }
+
+    /**
+     * Slices document into valid html sub-documents, whose text content is less than maxLength
+     * @param document
+     * @param maxLength
+     * @return list of valid html sub-documents
+     */
+    public static List&lt;Document&gt; splitHtmlByContentLength(Document document, int maxLength) {
+<span class="fc" id="L82">        SplitPointMarker marker = new SplitPointMarker();</span>
+<span class="fc" id="L83">        document = marker.markSplitPoints(document, maxLength);</span>
+
+        // how much splits required
+<span class="fc" id="L86">        int splitCount = document.select(&quot;.&quot;+SPLIT_CLASS_NAME).size();</span>
+
+        // splitting document by split elements
+<span class="fc" id="L89">        List&lt;Document&gt; documentPages = new ArrayList&lt;&gt;(splitCount+1);</span>
+<span class="fc" id="L90">        Document unprocessedPart = document;</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (int i = 0; i &lt; splitCount; i++) {</span>
+<span class="fc" id="L93">            List&lt;Document&gt; parts = splitHtmlByMarkedElement(unprocessedPart);</span>
+<span class="fc" id="L94">            documentPages.add(parts.get(0));</span>
+<span class="fc" id="L95">            unprocessedPart = parts.get(1);</span>
+        }
+<span class="fc" id="L97">        documentPages.add(unprocessedPart);</span>
+<span class="fc" id="L98">        return documentPages;</span>
+    }
+
+    // dirty trick to make static class store some intermediate data during recursive calls
+<span class="fc" id="L102">    static class SplitPointMarker {</span>
+        Document document;
+        long currentPageLength;
+        long maxLength;
+        Document markSplitPoints(Document document, long maxLength) {
+<span class="fc" id="L107">            this.document = document;</span>
+<span class="fc" id="L108">            this.maxLength = maxLength;</span>
+<span class="fc" id="L109">            tryFitOnPage(this.document.root());</span>
+<span class="fc" id="L110">            return this.document;</span>
+        }
+        private void tryFitOnPage(Element element) {
+            // there is no point in look for head, style or script elements
+<span class="pc bpc" id="L114" title="1 of 4 branches missed.">            if (element.tagName().equals(&quot;head&quot;) || element.tagName().equals(&quot;style&quot;)</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                    || element.tagName().equals(&quot;script&quot;)) {</span>
+<span class="fc" id="L116">                return;</span>
+            }
+
+<span class="fc" id="L119">            long textLength = element.text().length();</span>
+
+            // if element fits on page - skip it and return to parent
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            if(currentPageLength + textLength &lt; maxLength) {</span>
+<span class="fc" id="L123">                this.currentPageLength = this.currentPageLength + textLength;</span>
+            } else {
+                // else - check if any of children fit
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                if (element.childrenSize() != 0) {</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">                    for (Element child : element.children()) {</span>
+                        // for every child updating currentPageLength
+<span class="fc" id="L129">                        tryFitOnPage(child);</span>
+<span class="fc" id="L130">                    }</span>
+                } else {
+                    // if no children exist - mark as split element
+<span class="fc" id="L133">                    element.addClass(SPLIT_CLASS_NAME);</span>
+                    // and reset page character count
+<span class="fc" id="L135">                    this.currentPageLength = 0;</span>
+                }
+            }
+<span class="fc" id="L138">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
