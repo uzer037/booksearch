@@ -1,12 +1,13 @@
 package ru.ntik.booksearch.entity;
 
-import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import org.hibernate.Length;
 import org.hibernate.annotations.Immutable;
 import org.springframework.stereotype.Indexed;
+
+import javax.persistence.*;
 
 
 @Entity
@@ -24,7 +25,7 @@ public class Page {
 
     private int pageNumber;
 
-    @Column(name = "doc_txt", length = Length.LONG32)
+    @Column(name = "doc_txt")
     private String html;
 
     public Page(int pageNumber, String html, Book book) {

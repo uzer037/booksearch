@@ -19,23 +19,23 @@ public class AppRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if (args.containsOption("load-book")) {
-            String bookPath = args.getOptionValues("load-book").get(0);
-            System.out.println(bookPath);
-            File bookFile = new File(bookPath);
-            if(bookFile.exists() && bookFile.canRead()) {
-                InputStream bookStream = new FileInputStream(bookFile);
-                Book book = bookService.loadEpubFromStream(bookStream);
-                try {
-                    bookService.save(book);
-                    System.out.println("Loaded book");
-                }
-                finally {
-                    bookStream.close();
-                }
-            } else {
-                System.out.println("Book is unavailable");
-            }
+        //if (args.containsOption("load-book")) {
+        //String bookPath = args.getOptionValues("load-book").get(0);
+        //System.out.println(bookPath);
+
+
+//            File bookFile = new File(bookPath);
+//            if(bookFile.exists() && bookFile.canRead()) {
+        String bookName = "treasure-island.epub";
+        InputStream bookStream = getClass().getClassLoader().getResourceAsStream(bookName);
+        try (bookStream) {
+            Book book = bookService.loadEpubFromStream(bookStream);
+            bookService.save(book);
+            System.out.println("Loaded book");
         }
+//            } else {
+//                System.out.println("Book is unavailable");
+//            }
+        //}
     }
 }

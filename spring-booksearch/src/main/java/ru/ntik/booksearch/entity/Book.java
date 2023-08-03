@@ -1,11 +1,12 @@
 package ru.ntik.booksearch.entity;
 
-import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Indexed;
 
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
