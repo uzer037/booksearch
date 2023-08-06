@@ -1,8 +1,8 @@
 package ru.ntik.booksearch.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.ntik.bookloader.BookLoader;
 import ru.ntik.bookloader.epub.EpubLoader;
 import ru.ntik.booksearch.entity.Book;
 import ru.ntik.booksearch.repository.BookRepository;
@@ -13,6 +13,8 @@ import java.io.InputStream;
 
 @Service
 public class BookService {
+    @Autowired
+    public BookSearchService bookSearchService;
     private final BookRepository bookRepository;
 
     public BookService(BookRepository bookRepository) {
@@ -29,12 +31,15 @@ public class BookService {
 
     public Book loadEpubFromStream(InputStream inputStream) throws IOException {
         Book book = new Book();
-        BookLoader loader = new EpubLoader();
+        EpubLoader loader = new EpubLoader();
+        loader.setImagesBaking(false);
         loader.loadFromSource(inputStream);
         for(int i = 0; i < loader.getPagesCount(); i++) {
-            book.addPage(loader.getPage(i+1));
+            book.addPage(loader.getPageText(i+1));
         }
         book.setName(loader.getTitle());
+
+        bookSearchService.isIndexUpToDate = false;
         return book;
     }
 }

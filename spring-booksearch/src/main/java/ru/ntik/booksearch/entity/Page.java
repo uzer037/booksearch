@@ -3,9 +3,9 @@ package ru.ntik.booksearch.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import org.hibernate.annotations.Immutable;
-import org.springframework.stereotype.Indexed;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 
 import javax.persistence.*;
 
@@ -19,18 +19,19 @@ import javax.persistence.*;
 public class Page {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     private int pageNumber;
 
-    @Column(name = "doc_txt")
-    private String html;
+    @Field
+    @Column(length = 3500)
+    private String pageText;
 
-    public Page(int pageNumber, String html, Book book) {
+    public Page(int pageNumber, String text, Book book) {
         this.pageNumber = pageNumber;
-        this.html = html;
+        this.pageText = text;
         this.book = book;
     }
 

@@ -119,20 +119,21 @@ class HtmlSlicer {
             long textLength = element.text().length();
 
             // if element fits on page - skip it and return to parent
-            if(currentPageLength + textLength < maxLength) {
-                this.currentPageLength = this.currentPageLength + textLength;
+            if(this.currentPageLength + textLength < maxLength) {
+                this.currentPageLength += textLength;
             } else {
                 // else - check if any of children fit
-                if (element.childrenSize() != 0) {
+                if (!element.children().isEmpty()) {
                     for (Element child : element.children()) {
                         // for every child updating currentPageLength
                         tryFitOnPage(child);
                     }
                 } else {
-                    // if no children exist - mark as split element
+                    // shout if can't fit element on next page
+                    // if no chhibernateildren exist - mark as split element
                     element.addClass(SPLIT_CLASS_NAME);
-                    // and reset page character count
-                    this.currentPageLength = 0;
+                    // and reset page character count starting from it
+                    this.currentPageLength = textLength;
                 }
             }
         }

@@ -95,18 +95,18 @@ class EpubLoaderTest {
 
         int pagesCount = loader.getPagesCount();
 
-        assertThatCode(()->loader.getPage(1)).doesNotThrowAnyException();
+        assertThatCode(()->loader.getPageText(1)).doesNotThrowAnyException();
 
         // page number should be between 1 and loader.getPagesCount()
-        assertThrows(IndexOutOfBoundsException.class, ()->loader.getPage(0));
-        assertThrows(IndexOutOfBoundsException.class, ()->loader.getPage(pagesCount+1));
+        assertThrows(IndexOutOfBoundsException.class, ()->loader.getPageText(0));
+        assertThrows(IndexOutOfBoundsException.class, ()->loader.getPageText(pagesCount+1));
 
         /*
          *  JSoup internally makes sure that string will be interpreted as valid html
          *  so at least let's make sure that html string is not empty
          */
         for(int i = 1; i <= pagesCount; i++) {
-            String pageHtml = loader.getPage(i);
+            String pageHtml = loader.getPageText(i);
             assertThat(pageHtml).isNotEmpty();
         }
     }

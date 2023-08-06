@@ -44,7 +44,6 @@
     </developers>
 
     <properties>
-        <vaadin.version>24.0.3</vaadin.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

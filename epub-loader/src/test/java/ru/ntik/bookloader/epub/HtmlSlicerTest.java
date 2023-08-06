@@ -129,7 +129,7 @@ class HtmlSlicerTest {
 
     @Test
     void splitByLength() {
-        String sampleText = "Sample Text"; // 12 (11  characters text + number character
+        String sampleText = "SampleText"; // 11 (10  characters text + number character)
         int maxLength = 24;
         Document document = Jsoup.parse("" +
                 "<div>" +
@@ -157,6 +157,10 @@ class HtmlSlicerTest {
         List<Document> parts = HtmlSlicer.splitHtmlByContentLength(document, maxLength);
         /*
             9 paragraphs grouped by 2 will give 5 groups, so there should be 5 parts
+            due to inner workings of jsoup it'll put one space between tags
+            so resulting grouped strings should have 11 + 1 + 11 = 23 characters
+            which will fit the 24 characters limit, but more will fail the test and
+            trigger page splitting
          */
         assertThat(parts).size().isEqualTo(5);
 

@@ -23,6 +23,16 @@ public class EpubLoader implements BookLoader {
     private Map<String, String> imageMap = new HashMap<>();
     private String title;
 
+    private boolean bakeImages = true;
+
+    /**
+     * Weither to load and integrate images into final html pages as base64 strings next time loadFromSource is called
+     * @param baking default = true
+     */
+    public void setImagesBaking(boolean baking)
+    {
+        this.bakeImages = baking;
+    }
     @Override
     public void loadFromSource(InputStream bookStream) throws IOException {
         nl.siegmann.epublib.domain.Book epubBook = epubReader.readEpub(bookStream);
@@ -31,11 +41,13 @@ public class EpubLoader implements BookLoader {
         List<SpineReference> references = epubBook.getSpine().getSpineReferences();
         Resources resources = epubBook.getResources();
 
-        // first identifying and loading all images
-        imageMap = new HashMap<>();
-        for(Resource res : resources.getAll()) {
-            if (MediatypeService.isBitmapImage(res.getMediaType())) {
-                imageMap.put(extractResourceFileName(res.getHref()), Base64.getEncoder().encodeToString(res.getData()));
+        if (bakeImages) {
+            // first identifying and loading all images
+            imageMap = new HashMap<>();
+            for (Resource res : resources.getAll()) {
+                if (MediatypeService.isBitmapImage(res.getMediaType())) {
+                    imageMap.put(extractResourceFileName(res.getHref()), Base64.getEncoder().encodeToString(res.getData()));
+                }
             }
         }
 
@@ -57,14 +69,21 @@ public class EpubLoader implements BookLoader {
                 }
 
                 Document document = Jsoup.parse(stringBuilder.toString());
-                document = loadImagesIntoDocument(document);
+                if (bakeImages) {
+                    document = loadImagesIntoDocument(document);
+                }
                 pages.addAll(sliceDocumentToPages(document));
             }
         }
     }
     @Override
-    public String getPage(int pageNumber) throws IndexOutOfBoundsException {
+    public String getPageHtml(int pageNumber) throws IndexOutOfBoundsException {
         return pages.get(pageNumber-1);
+    }
+
+    @Override
+    public String getPageText(int pageNumber) throws IndexOutOfBoundsException {
+        return Jsoup.parse(getPageHtml(pageNumber)).text();
     }
 
     @Override

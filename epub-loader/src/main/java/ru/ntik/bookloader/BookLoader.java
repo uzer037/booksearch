@@ -17,7 +17,14 @@ public interface BookLoader {
      * @return Html string for page with given number
      * @throws IndexOutOfBoundsException if there is no page with such number
      */
-    String getPage(int pageNumber) throws IndexOutOfBoundsException;
+    String getPageHtml(int pageNumber) throws IndexOutOfBoundsException;
+
+    /**
+     * @param pageNumber
+     * @return String of text for page with given number
+     * @throws IndexOutOfBoundsException if there is no page with such number
+     */
+    String getPageText(int pageNumber) throws IndexOutOfBoundsException;
 
     /**
      * @return total pages number. If book isn't loaded or empty - returns 0
