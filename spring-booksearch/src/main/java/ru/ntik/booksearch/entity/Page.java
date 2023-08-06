@@ -4,8 +4,8 @@ package ru.ntik.booksearch.entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import javax.persistence.*;
 
@@ -25,7 +25,7 @@ public class Page {
 
     private int pageNumber;
 
-    @Field
+    @FullTextField
     @Column(length = 3500)
     private String pageText;
 

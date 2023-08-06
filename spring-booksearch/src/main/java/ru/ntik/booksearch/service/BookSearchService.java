@@ -1,10 +1,8 @@
 package ru.ntik.booksearch.service;
 
-import org.apache.lucene.search.Query;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.FullTextQuery;
-import org.hibernate.search.jpa.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +20,20 @@ public class BookSearchService {
     EntityManager entityManager;
     boolean isIndexUpToDate = false;
     @Transactional
-    public void rebuildIndex() throws InterruptedException {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        fullTextEntityManager.createIndexer().startAndWait();
-        isIndexUpToDate = true;
+    public void rebuildIndex() {
+        SearchSession session = Search.session(entityManager);
+        MassIndexer indexer = session.massIndexer().idFetchSize(200).batchSizeToLoadObjects(25)
+                .threadsToLoadObjects(8);
+        try {
+            indexer.startAndWait();
+            isIndexUpToDate = true;
+            System.out.println("Index created.");
+        } catch (InterruptedException e) {
+            // sonarlint: either re-interrupt this method or rethrow the "InterruptedException"
+            // Am I really should do this?
+            System.err.println("Unable to build index: " + e);
+            isIndexUpToDate = false;
+        }
     }
 
     /**
@@ -33,12 +41,6 @@ public class BookSearchService {
      * @param word single-word string to match
      * @return list of pages (strings) containing given string.
      */
-    @Transactional
-    public List<Page> findWord(String word) {
-        getQueryBuilder();
-        Query query = getQueryBuilder().keyword().onField("pageText").matching(word).createQuery();
-        return runQuery(query);
-    }
 
     /**
      * Runs Hibernate search query to match given string
@@ -47,8 +49,9 @@ public class BookSearchService {
      */
     @Transactional
     public List<Page> findPhrase(String phrase) {
-        Query query = getQueryBuilder().phrase().onField("pageText").sentence(phrase).createQuery();
-        return runQuery(query);
+        SearchSession session = Search.session(entityManager);
+        return session.search(Page.class).where(p->p.match().field("pageText").matching(phrase))
+                .fetchAll().hits();
     }
 
     /**
@@ -56,16 +59,4 @@ public class BookSearchService {
      * @param query to run
      * @return List of pages (entities) containing given text
      */
-    @Transactional
-    public List runQuery(Query query) {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        FullTextQuery jpaQuery = fullTextEntityManager.createFullTextQuery(query, Page.class);
-        return jpaQuery.getResultList();
-    }
-
-    QueryBuilder getQueryBuilder() {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        return fullTextEntityManager.getSearchFactory()
-                .buildQueryBuilder().forEntity(Page.class).get();
-    }
 }

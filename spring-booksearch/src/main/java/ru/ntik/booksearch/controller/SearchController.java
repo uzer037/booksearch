@@ -17,7 +17,7 @@ public class SearchController {
     @RequestMapping("/search")
     public String getPagesWith(Model model, @RequestParam(value = "query") String query) {
         System.out.println("Searching \"" + query + "\" in indexed content...");
-        List<String> result = bookSearchService.findWord(query).stream().map(Page::getPageText).toList();
+        List<String> result = bookSearchService.findPhrase(query).stream().map(Page::getPageText).toList();
         System.out.println("Found " + result.size() + " results.");
         model.addAttribute("count", result.size());
         model.addAttribute("pages", result);

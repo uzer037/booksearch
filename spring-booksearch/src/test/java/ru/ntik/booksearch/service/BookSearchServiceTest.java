@@ -58,13 +58,6 @@ class BookSearchServiceTest {
     // ============ //
     // Actual tests //
     // ============ //
-    @Test
-    void findWord() {
-        List<Page> result = bookSearchService.findWord("Hispaniola");
-        assertThat(result).isNotEmpty();
-        System.out.println("Found " + result.size() + " single word matches.");
-        System.out.println(result.get(0).getPageText());
-    }
 
     @Test
     void findPhrase() {
